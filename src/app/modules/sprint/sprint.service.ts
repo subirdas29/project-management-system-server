@@ -4,8 +4,8 @@ import httpStatus from 'http-status';
 import { Sprint } from './sprint.model';
 import { TSprint } from './sprint.interface';
 import { Project } from '../project/project.model';
-import AppError from '../errors/AppError';
-import QueryBuilder from '../builder/QueryBuilder';
+import AppError from '../../errors/AppError';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 const createSprint = async (payload: {
   title: string;
@@ -16,7 +16,7 @@ const createSprint = async (payload: {
   const projectObjectId = new Types.ObjectId(payload.projectId);
 
   // ensure project exists (and not deleted)
-  const project = await Project.findOne({ _id: projectObjectId, isDeleted: false });
+  const project = await Project.findOne({ _id: projectObjectId,  });
   if (!project) throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
 
   const session = await mongoose.startSession();
@@ -26,14 +26,12 @@ const createSprint = async (payload: {
 
     const lastSprint = await Sprint.findOne({
       projectId: projectObjectId,
-      isDeleted: false,
     })
       .sort({ sprintNumber: -1 })
       .session(session);
 
     const nextSprintNumber = lastSprint ? lastSprint.sprintNumber + 1 : 1;
 
-    // order management: default order = sprintNumber (simple + stable)
     const nextOrder = nextSprintNumber;
 
     const sprintDoc = await Sprint.create(
@@ -45,7 +43,7 @@ const createSprint = async (payload: {
           order: nextOrder,
           startDate: new Date(payload.startDate),
           endDate: new Date(payload.endDate),
-          isDeleted: false,
+          
         } as TSprint,
       ],
       { session },
@@ -66,7 +64,7 @@ const getProjectSprints = async (projectId: string, query: Record<string, unknow
   const projectObjectId = new Types.ObjectId(projectId);
 
   const qb = new QueryBuilder(
-    Sprint.find({ projectId: projectObjectId, isDeleted: false }).sort({ order: 1 }),
+    Sprint.find({ projectId: projectObjectId,  }).sort({ order: 1 }),
     query,
   )
     .search(['title'])
@@ -82,35 +80,46 @@ const getProjectSprints = async (projectId: string, query: Record<string, unknow
 };
 
 const getSingleSprint = async (sprintId: string) => {
-  const sprint = await Sprint.findOne({ _id: sprintId, isDeleted: false });
+  const sprint = await Sprint.findOne({ _id: sprintId,  });
   if (!sprint) throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
   return sprint;
 };
 
-const updateSprint = async (sprintId: string, payload: Partial<TSprint>) => {
-  // disallow changing sprintNumber/order from this endpoint
-  const { sprintNumber, order, projectId, ...safePayload } = payload;
+const updateSprint = async (
+  sprintId: string,
+  payload: Partial<TSprint>,
+) => {
+  const safePayload: Partial<TSprint> = {
+    title: payload.title,
+    startDate: payload.startDate,
+    endDate: payload.endDate,
+  };
 
   const updated = await Sprint.findOneAndUpdate(
-    { _id: sprintId, isDeleted: false },
+    { _id: sprintId,  },
     safePayload,
     { new: true },
   );
 
-  if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
+  if (!updated) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
+  }
+
   return updated;
 };
 
-const deleteSprint = async (sprintId: string) => {
-  const deleted = await Sprint.findOneAndUpdate(
-    { _id: sprintId, isDeleted: false },
-    { isDeleted: true },
-    { new: true },
-  );
 
-  if (!deleted) throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
+
+const deleteSprint = async (sprintId: string) => {
+  const deleted = await Sprint.findByIdAndDelete(sprintId);
+
+  if (!deleted) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
+  }
+
   return null;
 };
+
 
 
 const reorderSprints = async (payload: {
@@ -118,43 +127,55 @@ const reorderSprints = async (payload: {
   items: { sprintId: string; order: number }[];
 }) => {
   const projectObjectId = new Types.ObjectId(payload.projectId);
-
   const session = await mongoose.startSession();
+
   try {
     session.startTransaction();
 
-    // optional: verify all sprints belong to this project
-    const sprintIds = payload.items.map((i) => new Types.ObjectId(i.sprintId));
+    const sprintIds = payload.items.map(
+      (i) => new Types.ObjectId(i.sprintId),
+    );
+
+ 
     const count = await Sprint.countDocuments({
       _id: { $in: sprintIds },
       projectId: projectObjectId,
-      isDeleted: false,
     }).session(session);
 
     if (count !== payload.items.length) {
-      throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sprint list for this project');
+      throw new AppError(httpStatus.BAD_REQUEST, 'Invalid sprint list');
     }
 
-    // bulk update order
-    const bulkOps = payload.items.map((i) => ({
+
+    const tempOps = payload.items.map((i, index) => ({
+      updateOne: {
+        filter: { _id: new Types.ObjectId(i.sprintId), projectId: projectObjectId },
+        update: { $set: { order: -(index + 1) } },
+      },
+    }));
+
+    await Sprint.bulkWrite(tempOps, { session });
+
+
+    const finalOps = payload.items.map((i) => ({
       updateOne: {
         filter: { _id: new Types.ObjectId(i.sprintId), projectId: projectObjectId },
         update: { $set: { order: i.order } },
       },
     }));
 
-    await Sprint.bulkWrite(bulkOps, { session });
+    await Sprint.bulkWrite(finalOps, { session });
 
     await session.commitTransaction();
-    await session.endSession();
-
     return null;
   } catch (e) {
     await session.abortTransaction();
-    await session.endSession();
     throw new AppError(httpStatus.BAD_REQUEST, 'Failed to reorder sprints');
+  } finally {
+    session.endSession();
   }
 };
+
 
 export const SprintService = {
   createSprint,

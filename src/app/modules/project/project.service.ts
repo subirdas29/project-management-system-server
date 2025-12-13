@@ -1,6 +1,6 @@
 // import { Types } from 'mongoose';
-import QueryBuilder from '../builder/QueryBuilder';
-import AppError from '../errors/AppError';
+import QueryBuilder from '../../builder/QueryBuilder';
+import AppError from '../../errors/AppError';
 import { TProject } from './project.interface';
 import { Project } from './project.model';
 

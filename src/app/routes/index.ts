@@ -1,9 +1,11 @@
 import { Router } from 'express';
+import { AuthRoutes } from '../modules/auth/auth.route';
+import { SprintRoutes } from '../modules/sprint/sprint.route';
+import { ProjectRoutes } from '../modules/project/project.route';
+import { TaskRoutes } from '../modules/task/task.route';
 // import { UserRoutes } from '../modules/user/user.route';
 
-import { AuthRoutes } from '../modules/auth/auth.route';
 
-import { ProjectRoutes } from '../project/project.route';
 
 
 const router = Router();
@@ -17,7 +19,15 @@ const moduleRoutes = [
   //   path: '/user',
   //   route: UserRoutes,
   // },
+ {
+    path:'/sprint',
+    route:SprintRoutes
+  },
 
+   {
+    path:'/tasks',
+    route:TaskRoutes
+  },
  
   {
     path:'/projects',
