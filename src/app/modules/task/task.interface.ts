@@ -9,28 +9,38 @@ export type TSubTask = {
   isDone?: boolean;
 };
 
+export type TAttachment = {
+  url: string;
+  type: 'image' | 'pdf';
+};
+
+
+export type TTaskActivity = {
+  action: string;
+  userId: Types.ObjectId;
+  createdAt: Date;
+};
+
 export type TTask = {
   title: string;
   description?: string;
 
-  // relations
-  projectId: Types.ObjectId;  
+  projectId: Types.ObjectId;
   sprintId: Types.ObjectId;
 
-  assignees?: Types.ObjectId[]; 
+  assignees?: Types.ObjectId[];
 
   estimateHours?: number;
   priority: TTaskPriority;
   status: TTaskStatus;
+
   dueDate?: Date;
 
-  attachments?: string[];
+  attachments?: TAttachment[]; 
   subtasks?: TSubTask[];
 
   isDeleted?: boolean;
-
+activityLog?: TTaskActivity[];
   createdAt?: Date;
   updatedAt?: Date;
 };
-
-

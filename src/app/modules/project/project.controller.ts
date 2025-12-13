@@ -69,6 +69,18 @@ const deleteProject = catchAsync(async (req, res) => {
     data: null,
   });
 });
+const getProjectOverview = catchAsync(async (req, res) => {
+  const { projectId } = req.params;
+  const result = await ProjectService.getProjectOverview(projectId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Project overview fetched',
+    data: result,
+  });
+});
+
 
 export const ProjectController = {
   createProject,
@@ -76,5 +88,6 @@ export const ProjectController = {
   getSingleProject,
   updateProject,
   deleteProject,
+  getProjectOverview
 };
 

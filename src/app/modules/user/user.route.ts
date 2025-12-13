@@ -1,68 +1,41 @@
-// import express from 'express';
-// // import validationRequest from '../../middlewares/validateRequest';
-// import { UserController } from './user.controller';
-// // import { userValidation } from './user.validation';
-// import { USER_ROLES } from './user.constant';
-// import auth from '../../middlewares/auth';
-// ;
+import express from 'express';
+import validationRequest from '../../middlewares/validateRequest';
+import auth from '../../middlewares/auth';
+import { USER_ROLES } from './user.constant';
+import { UserController } from './user.controller';
+import { userValidation } from './user.validation';
 
-// const router = express.Router();
+const router = express.Router();
 
-// router.post(
-//   '/register',
-//   // validationRequest(userValidation.registerValidationSchema),
-//   UserController.registerUserController,
-// );
+router.post(
+  '/register',
+  validationRequest(userValidation.registerValidationSchema),
+  UserController.registerUser,
+);
 
-// router.patch(
-//   '/profile-data',
-//   auth( USER_ROLES.admin,USER_ROLES.mealprovider),
-//   // validationRequest(userValidation.updateProfileSchema),
-//   UserController.profileData,
-// )
+router.get(
+  '/',
+  auth(USER_ROLES.admin, USER_ROLES.manager),
+  UserController.getAllUsers,
+);
 
-// router.get(
-//   '/my-data',
-//   auth( USER_ROLES.customer,USER_ROLES.mealprovider),
-//   // validationRequest(userValidation.updateProfileSchema),
-//   UserController.getMe,
-// )
-// // router.get(
-// //   '/all-users',
-// //   auth(USER_ROLES.admin),
-// //   UserController.getAllUsers,
-// // );
+router.get(
+  '/me',
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+  UserController.getMe,
+);
 
-// // router.get(
-// //   '/:userId',
-// //   auth(USER_ROLES.admin),
-// //   UserController.getAUser,
-// // );
+router.patch(
+  '/me',
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+  validationRequest(userValidation.updateProfileSchema),
+  UserController.updateProfile,
+);
 
-// // router.get(
-// //   '/me/details',
-// //   auth( USER_ROLES.admin, USER_ROLES.user),
-// //   UserController.getMe,
-// // );
+router.get(
+  '/:userId',
+  auth(USER_ROLES.admin, USER_ROLES.manager),
+  UserController.getSingleUser,
+);
 
-// // router.get(
-// //   '/my-order/details',
-// //   auth( USER_ROLES.admin, USER_ROLES.user),
-// //   UserController.getMyOrder,
-// // )
-
-// // router.patch(
-// //   '/block-user/:userId',
-// //   auth(USER_ROLES.admin),
-// //   UserController.blockUser,
-// // )
-// // router.patch(
-// //   '/unblock-user/:userId',
-// //   auth(USER_ROLES.admin),
-// //   UserController.unblockUser,
-// // )
-
-
-
-
-// export const UserRoutes = router;
+export const UserRoutes = router;

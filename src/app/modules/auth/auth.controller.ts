@@ -1,14 +1,14 @@
 import httpStatus from 'http-status';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-
 import config from '../../config';
+
 import { AuthServices } from './auth.service';
 
 const loginUser = catchAsync(async (req, res) => {
   const result = await AuthServices.loginUser(req.body);
 
-  const { refreshToken, accessToken } = result;
+  const { accessToken, refreshToken } = result;
 
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
@@ -21,42 +21,36 @@ const loginUser = catchAsync(async (req, res) => {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Login successful',
-    data: {
-      accessToken,
-    },
+    data: { accessToken },
   });
 });
 
 const refreshToken = catchAsync(async (req, res) => {
   const { refreshToken } = req.cookies;
+
   const result = await AuthServices.refreshToken(refreshToken);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Access Token is retrieved successfully!',
+    message: 'Access token retrieved',
     data: result,
   });
 });
 
-
-
 const changePassword = catchAsync(async (req, res) => {
-  const { ...passwordData } = req.body;
+  await AuthServices.changePassword(req.user, req.body);
 
-
-  const result = await AuthServices.changePassword(req.user, passwordData);
-  
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Password is updated successfully!',
-    data: result,
+    message: 'Password changed successfully',
+    data: null,
   });
 });
 
 export const AuthControllers = {
   loginUser,
   refreshToken,
-  changePassword
+  changePassword,
 };

@@ -11,14 +11,14 @@ const router = express.Router();
 
 router.patch(
   '/reorder',
-//   auth(USER_ROLES.admin, USER_ROLES.manager),
+  auth(USER_ROLES.admin, USER_ROLES.manager),
   validationRequest(sprintValidation.reorderSprintValidationSchema),
   SprintController.reorderSprints,
 );
 
 router.post(
   '/',
-//   auth(USER_ROLES.admin, USER_ROLES.manager),
+  auth(USER_ROLES.admin, USER_ROLES.manager),
   validationRequest(sprintValidation.createSprintValidationSchema),
   SprintController.createSprint,
 );
@@ -26,21 +26,21 @@ router.post(
 
 router.get(
   '/project/:projectId',
-//   auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
   SprintController.getProjectSprints,
 );
 
 
 router.get(
   '/:sprintId',
-//   auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
   SprintController.getSingleSprint,
 );
 
 
 router.patch(
   '/:sprintId',
-//   auth(USER_ROLES.admin, USER_ROLES.manager),
+  auth(USER_ROLES.admin, USER_ROLES.manager),
   validationRequest(sprintValidation.updateSprintValidationSchema),
   SprintController.updateSprint,
 );
@@ -48,8 +48,14 @@ router.patch(
 
 router.delete(
   '/:sprintId',
-//   auth(USER_ROLES.admin, USER_ROLES.manager),
+  auth(USER_ROLES.admin, USER_ROLES.manager),
   SprintController.deleteSprint,
+);
+
+router.get(
+  '/:sprintId/details',
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+  SprintController.getSprintDetails,
 );
 
 

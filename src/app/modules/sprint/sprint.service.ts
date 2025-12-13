@@ -6,6 +6,7 @@ import { TSprint } from './sprint.interface';
 import { Project } from '../project/project.model';
 import AppError from '../../errors/AppError';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { Task } from '../task/task.model';
 
 const createSprint = async (payload: {
   title: string;
@@ -53,7 +54,7 @@ const createSprint = async (payload: {
     await session.endSession();
 
     return sprintDoc[0];
-  } catch (e) {
+  } catch {
     await session.abortTransaction();
     await session.endSession();
     throw new AppError(httpStatus.BAD_REQUEST, 'Failed to create sprint');
@@ -168,12 +169,28 @@ const reorderSprints = async (payload: {
 
     await session.commitTransaction();
     return null;
-  } catch (e) {
+  } catch{
     await session.abortTransaction();
     throw new AppError(httpStatus.BAD_REQUEST, 'Failed to reorder sprints');
   } finally {
     session.endSession();
   }
+};
+const getSprintDetails = async (sprintId: string) => {
+  const sprint = await Sprint.findById(sprintId);
+  if (!sprint) throw new AppError(404, 'Sprint not found');
+
+  const tasks = await Task.find({ sprintId });
+
+  const completed = tasks.filter((t) => t.status === 'done').length;
+  const progress =
+    tasks.length === 0 ? 0 : Math.round((completed / tasks.length) * 100);
+
+  return {
+    sprint,
+    tasks,
+    progress,
+  };
 };
 
 
@@ -184,4 +201,5 @@ export const SprintService = {
   updateSprint,
   deleteSprint,
   reorderSprints,
+  getSprintDetails
 };

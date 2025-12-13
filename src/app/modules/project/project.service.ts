@@ -1,6 +1,8 @@
 // import { Types } from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
+import { Sprint } from '../sprint/sprint.model';
+import { Task } from '../task/task.model';
 import { TProject } from './project.interface';
 import { Project } from './project.model';
 
@@ -77,10 +79,36 @@ const deleteProject = async (projectId: string) => {
   return null;
 };
 
+const getProjectOverview = async (projectId: string) => {
+  const project = await Project.findById(projectId);
+  if (!project) throw new AppError(404, 'Project not found');
+
+  const totalTasks = await Task.countDocuments({ projectId });
+  const completedTasks = await Task.countDocuments({
+    projectId,
+    status: 'Done',
+  });
+
+  const sprints = await Sprint.find({ projectId }).select('title sprintNumber');
+
+  const progress =
+    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+  return {
+    project,
+    totalTasks,
+    completedTasks,
+    progress,
+    sprints,
+  };
+};
+
+
 export const ProjectService = {
   createProject,
   getAllProjects,
   getSingleProject,
   updateProject,
   deleteProject,
+  getProjectOverview
 };

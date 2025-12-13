@@ -3,7 +3,10 @@ import { AuthRoutes } from '../modules/auth/auth.route';
 import { SprintRoutes } from '../modules/sprint/sprint.route';
 import { ProjectRoutes } from '../modules/project/project.route';
 import { TaskRoutes } from '../modules/task/task.route';
-// import { UserRoutes } from '../modules/user/user.route';
+import { TeamRoutes } from '../modules/team/team.route';
+import { ReportRoutes } from '../modules/report/report.route';
+import { UserRoutes } from '../modules/user/user.route';
+import { TaskCommentRoutes } from '../modules/taskComment/taskComment.route';
 
 
 
@@ -15,14 +18,29 @@ const moduleRoutes = [
     path: '/auth',
     route: AuthRoutes,
   },
-  // {
-  //   path: '/user',
-  //   route: UserRoutes,
-  // },
+  {
+    path: '/user',
+    route: UserRoutes,
+  },
+   {
+    path: '/comments',
+    route: TaskCommentRoutes,
+  },
  {
     path:'/sprint',
     route:SprintRoutes
   },
+
+   {
+    path:'/team',
+    route:TeamRoutes
+  },
+
+   {
+    path:'/reports',
+    route:ReportRoutes
+  },
+
 
    {
     path:'/tasks',

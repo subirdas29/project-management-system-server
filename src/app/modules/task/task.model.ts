@@ -19,7 +19,7 @@ const taskSchema = new Schema<TTask>(
     sprintId: { type: Schema.Types.ObjectId, ref: 'Sprint', required: true },
 
     assignees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-
+    
     estimateHours: { type: Number, min: 0 },
     priority: {
       type: String,
@@ -33,6 +33,21 @@ const taskSchema = new Schema<TTask>(
       enum: Object.keys(TASK_STATUS),
       default: 'todo',
     },
+    activityLog: [
+  {
+    action: { type: String, required: true },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+],
+
 
     dueDate: { type: Date },
     attachments: { type: [String], default: [] },

@@ -4,7 +4,11 @@ import sendResponse from '../../utils/sendResponse';
 import { TaskService } from './task.service';
 
 const createTask = catchAsync(async (req, res) => {
-  const result = await TaskService.createTask(req.body);
+  const result = await TaskService.createTask(
+  req.body,
+  req.user as { userId: string; role: string },
+);
+
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
@@ -40,7 +44,12 @@ const getSingleTask = catchAsync(async (req, res) => {
 
 const updateTask = catchAsync(async (req, res) => {
   const { taskId } = req.params;
-  const result = await TaskService.updateTask(taskId, req.body);
+  const result = await TaskService.updateTask(
+  taskId,
+  req.body,
+  req.user as { userId: string; role: string },
+);
+
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -50,12 +59,17 @@ const updateTask = catchAsync(async (req, res) => {
   });
 });
 
-// Kanban drag-drop
+
 const updateTaskStatus = catchAsync(async (req, res) => {
   const { taskId } = req.params;
   const { status } = req.body;
 
-  const result = await TaskService.updateTaskStatus(taskId, status);
+ const result = await TaskService.updateTaskStatus(
+  taskId,
+  status,
+  req.user as { userId: string; role: string },
+);
+
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

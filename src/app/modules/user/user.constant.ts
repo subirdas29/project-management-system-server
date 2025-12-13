@@ -4,7 +4,4 @@ export const USER_ROLES = {
   member: 'member',
 } as const;
 
-
-export const userSearchableFields = ['name',
-  'email']
-  
+export const userSearchableFields = ['name', 'email', 'department'];

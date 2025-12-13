@@ -74,6 +74,18 @@ const reorderSprints = catchAsync(async (req, res) => {
     data: null,
   });
 });
+const getSprintDetails = catchAsync(async (req, res) => {
+  const { sprintId } = req.params;
+  const result = await SprintService.getSprintDetails(sprintId);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Sprint details fetched',
+    data: result,
+  });
+});
+
 
 export const SprintController = {
   createSprint,
@@ -82,4 +94,5 @@ export const SprintController = {
   updateSprint,
   deleteSprint,
   reorderSprints,
+  getSprintDetails
 };

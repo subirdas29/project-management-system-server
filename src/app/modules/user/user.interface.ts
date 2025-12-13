@@ -1,23 +1,25 @@
 import { Model, Types } from 'mongoose';
 import { USER_ROLES } from './user.constant';
 
-export type TMyOrders = {
-  orders: Types.ObjectId;
-  isDeleted: boolean;
-};
+export type TUserRole = keyof typeof USER_ROLES;
 
 export type TUser = {
-  _id: Types.ObjectId; 
+  _id?: Types.ObjectId; 
   name: string;
   email: string;
   password: string;
-  role: TUserRole; 
+  role: TUserRole;
+
+  // PDF fields
+  department?: string;
+  skills?: string[];
+
   phone?: string;
-  isDeleted?: boolean;
   profileImage?: string[];
   address?: string;
   city?: string;
-  preferences?: string[];
+
+  isDeleted?: boolean;
   passwordChangedAt?: Date;
   createdAt?: Date;
   updatedAt?: Date;
@@ -28,11 +30,11 @@ export interface UserModel extends Model<TUser> {
     plainTextPassword: string,
     hashPassword: string,
   ): Promise<boolean>;
-  isUserExist(email: string): Promise<TUser>;
+
+  isUserExist(email: string): Promise<TUser | null>;
+
   isJWTIssuedBeforePasswordChanged(
     passwordChangedTimestamp: Date,
     jwtIssuedTimestamp: number,
   ): boolean;
 }
-
-export type TUserRole = keyof typeof USER_ROLES;

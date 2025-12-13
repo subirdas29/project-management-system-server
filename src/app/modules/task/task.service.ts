@@ -3,20 +3,20 @@ import  { Types } from 'mongoose';
 import AppError from '../../errors/AppError';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { Task } from './task.model';
-import { TTask } from './task.interface';
+import { TTask, TTaskStatus } from './task.interface';
 import { taskSearchableFields } from './task.constant';
 import { Sprint } from '../sprint/sprint.model';
 
-const createTask = async (payload: Partial<TTask>) => {
+const createTask = async (payload: Partial<TTask> , user: { userId: string; role: string }) => {
   if (!payload.sprintId) {
     throw new AppError(httpStatus.BAD_REQUEST, 'sprintId is required');
   }
 
-  // 1) ensure sprint exists
+
   const sprint = await Sprint.findById(payload.sprintId);
   if (!sprint) throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
 
-  // 2) derive projectId from sprint
+
   const taskPayload: Partial<TTask> = {
     ...payload,
     projectId: sprint.projectId as unknown as Types.ObjectId,
@@ -24,15 +24,25 @@ const createTask = async (payload: Partial<TTask>) => {
     dueDate: payload.dueDate ? new Date(payload.dueDate) : undefined,
   };
 
-  const created = await Task.create(taskPayload);
+  const created = await Task.create({
+  ...taskPayload,
+  activityLog: [
+    {
+      action: 'Task created',
+      userId: new Types.ObjectId(user.userId),
+      createdAt: new Date(),
+    },
+  ],
+});
+
   return created;
 };
 
 const getAllTasks = async (query: Record<string, unknown>) => {
-  // Default: only active tasks
+
   const qb = new QueryBuilder(Task.find({ isDeleted: false }), query)
     .search(taskSearchableFields)
-    .filter()     // supports: projectId, sprintId, status, priority, etc.
+    .filter()  
     .sort()
     .paginate()
     .fields();
@@ -59,44 +69,102 @@ const getSingleTask = async (taskId: string) => {
   return task;
 };
 
-const updateTask = async (taskId: string, payload: Partial<TTask>) => {
-  // protect relations from random changes
-  const safePayload: Partial<TTask> = {
-    title: payload.title,
-    description: payload.description,
-    assignees: payload.assignees,
-    estimateHours: payload.estimateHours,
-    priority: payload.priority,
-    status: payload.status,
-    dueDate: payload.dueDate ? new Date(payload.dueDate) : undefined,
-    attachments: payload.attachments,
-    subtasks: payload.subtasks,
-  };
+const updateTask = async (
+  taskId: string,
+  payload: Partial<TTask>,
+  user: { userId: string; role: string },
+) => {
+  const task = await Task.findOne({ _id: taskId, isDeleted: false });
 
-  const updated = await Task.findOneAndUpdate(
-    { _id: taskId, isDeleted: false },
-    safePayload,
-    { new: true },
-  );
+  if (!task) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+  }
 
-  if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
-  return updated;
+
+  task.title = payload.title ?? task.title;
+  task.description = payload.description ?? task.description;
+  task.assignees = payload.assignees ?? task.assignees;
+  task.estimateHours = payload.estimateHours ?? task.estimateHours;
+  task.priority = payload.priority ?? task.priority;
+  task.status = payload.status ?? task.status;
+  task.dueDate = payload.dueDate
+    ? new Date(payload.dueDate)
+    : task.dueDate;
+  task.attachments = payload.attachments ?? task.attachments;
+  task.subtasks = payload.subtasks ?? task.subtasks;
+
+  task.activityLog?.push({
+    action: 'Task details updated',
+    userId: new Types.ObjectId(user.userId),
+    createdAt: new Date(),
+  });
+
+  await task.save();
+  return task;
 };
 
-// Kanban drag-drop
-const updateTaskStatus = async (taskId: string, status: string) => {
-  const updated = await Task.findOneAndUpdate(
-    { _id: taskId, isDeleted: false },
-    { status },
-    { new: true },
-  );
 
-  if (!updated) throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
-  return updated;
+
+const updateTaskStatus = async (
+  taskId: string,
+  status: TTaskStatus,
+  user: { userId: string; role: string },
+) => {
+  const task = await Task.findOne({ _id: taskId, isDeleted: false });
+
+  if (!task) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+  }
+
+
+  if (
+    user.role === 'member' &&
+    task.assignees &&
+    !task.assignees.map(id => id.toString()).includes(user.userId)
+  ) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'You are not assigned to this task',
+    );
+  }
+
+
+  if (
+    task.status === 'review' &&
+    status === 'done' &&
+    !['admin', 'manager'].includes(user.role)
+  ) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'Manager approval required to complete task',
+    );
+  }
+
+  task.status = status;
+
+
+task.activityLog?.push({
+  action: `Status changed to ${status}`,
+  userId: new Types.ObjectId(user.userId),
+  createdAt: new Date(),
+});
+
+
+if (task.status === 'review' && status === 'done') {
+  task.activityLog?.push({
+    action: 'Task approved by manager',
+    userId: new Types.ObjectId(user.userId),
+    createdAt: new Date(),
+  });
+}
+  await task.save();
+
+  return task;
 };
+
 
 const deleteTask = async (taskId: string) => {
-  // soft delete is safer for tasks
+
   const deleted = await Task.findOneAndUpdate(
     { _id: taskId, isDeleted: false },
     { isDeleted: true },
