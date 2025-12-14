@@ -1,34 +1,55 @@
-import { Task } from '../task/task.model';
 import { Types } from 'mongoose';
+import { Task } from '../task/task.model';
+
 
 const getProjectReport = async (projectId: string) => {
   const pid = new Types.ObjectId(projectId);
 
-  const tasks = await Task.find({ projectId: pid });
+  const result = await Task.aggregate([
+    {
+      $match: {
+        projectId: pid,
+        isDeleted: false,
+      },
+    },
+    {
+      $group: {
+        _id: '$projectId',
+        totalTasks: { $sum: 1 },
+        completedTasks: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'done'] }, 1, 0],
+          },
+        },
+        totalEstimatedHours: {
+          $sum: { $ifNull: ['$estimateHours', 0] },
+        },
+        totalLoggedHours: {
+          $sum: { $ifNull: ['$loggedHours', 0] },
+        },
+      },
+    },
+  ]);
 
-  const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.status === 'done').length;
-
-  const totalEstimatedHours = tasks.reduce(
-    (sum, t) => sum + (t.estimateHours || 0),
-    0
-  );
-
-  const totalLoggedHours = tasks.reduce(
-    (sum, t) => sum + (t.loggedHours || 0),
-    0
-  );
+  const data = result[0] || {
+    totalTasks: 0,
+    completedTasks: 0,
+    totalEstimatedHours: 0,
+    totalLoggedHours: 0,
+  };
 
   return {
-    totalTasks,
-    completedTasks,
-    remainingTasks: totalTasks - completedTasks,
+    totalTasks: data.totalTasks,
+    completedTasks: data.completedTasks,
+    remainingTasks: data.totalTasks - data.completedTasks,
     progressPercent:
-      totalTasks === 0
+      data.totalTasks === 0
         ? 0
-        : Math.round((completedTasks / totalTasks) * 100),
-    totalEstimatedHours,
-    totalLoggedHours,
+        : Math.round(
+            (data.completedTasks / data.totalTasks) * 100,
+          ),
+    totalEstimatedHours: data.totalEstimatedHours,
+    totalLoggedHours: data.totalLoggedHours,
   };
 };
 
@@ -36,26 +57,47 @@ const getProjectReport = async (projectId: string) => {
 const getUserReport = async (userId: string) => {
   const uid = new Types.ObjectId(userId);
 
-  const tasks = await Task.find({ assignees: uid });
+  const result = await Task.aggregate([
+    {
+      $match: {
+        assignees: uid,
+        isDeleted: false,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        totalTasks: { $sum: 1 },
+        completedTasks: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'done'] }, 1, 0],
+          },
+        },
+        totalEstimatedHours: {
+          $sum: { $ifNull: ['$estimateHours', 0] },
+        },
+        totalLoggedHours: {
+          $sum: { $ifNull: ['$loggedHours', 0] },
+        },
+      },
+    },
+  ]);
 
-  const completed = tasks.filter(t => t.status === 'done').length;
+  const data = result[0] || {
+    totalTasks: 0,
+    completedTasks: 0,
+    totalEstimatedHours: 0,
+    totalLoggedHours: 0,
+  };
 
   return {
-    totalTasks: tasks.length,
-    completedTasks: completed,
-    remainingTasks: tasks.length - completed,
-    totalEstimatedHours: tasks.reduce(
-      (sum, t) => sum + (t.estimateHours || 0),
-      0
-    ),
-    totalLoggedHours: tasks.reduce(
-      (sum, t) => sum + (t.loggedHours || 0),
-      0
-    ),
+    totalTasks: data.totalTasks,
+    completedTasks: data.completedTasks,
+    remainingTasks: data.totalTasks - data.completedTasks,
+    totalEstimatedHours: data.totalEstimatedHours,
+    totalLoggedHours: data.totalLoggedHours,
   };
 };
-
-
 
 export const ReportService = {
   getProjectReport,
