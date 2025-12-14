@@ -3,27 +3,31 @@ import sendResponse from '../../utils/sendResponse';
 import httpStatus from 'http-status';
 import { ReportService } from './report.service';
 
-const getProjectReport = catchAsync(async (req, res) => {
-  const result = await ReportService.getProjectReport(req.params.projectId);
+export const getProjectReport = catchAsync(async (req, res) => {
+  const { projectId } = req.params;
+  const data = await ReportService.getProjectReport(projectId);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Project report generated',
-    data: result,
+    message: 'Project report fetched',
+    data,
   });
 });
 
-const getUserReport = catchAsync(async (req, res) => {
-  const result = await ReportService.getUserReport(req.params.userId);
+export const getMyReport = catchAsync(async (req, res) => {
+  const userId = req.user.userId;
+  const data = await ReportService.getUserReport(userId);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'User report generated',
-    data: result,
+    message: 'User report fetched',
+    data,
   });
 });
 
 export const ReportController = {
   getProjectReport,
-  getUserReport,
+  getMyReport,
 };

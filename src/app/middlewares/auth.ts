@@ -11,7 +11,13 @@ import { verifyToken } from '../modules/auth/auth.utils';
 
 const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req, res, next) => {
-    const token = req.headers.authorization;
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized');
+    }
+
+    const token = authHeader.split(' ')[1];
 
     if (!token) {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized');
@@ -57,7 +63,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
       throw new AppError(httpStatus.UNAUTHORIZED, 'You are not authorized');
     }
 
-   
+
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
@@ -67,6 +73,7 @@ const auth = (...requiredRoles: TUserRole[]) => {
     next();
   });
 };
+
 
 
 export default auth;

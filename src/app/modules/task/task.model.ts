@@ -33,6 +33,30 @@ const taskSchema = new Schema<TTask>(
       enum: Object.keys(TASK_STATUS),
       default: 'todo',
     },
+  timeLogs: [
+  {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    hours: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+],
+loggedHours: {
+  type: Number,
+  min: 0,
+  default: 0,
+},
+
     activityLog: [
   {
     action: { type: String, required: true },

@@ -1,4 +1,4 @@
-// import { Types } from 'mongoose';
+import { Types } from 'mongoose';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { Sprint } from '../sprint/sprint.model';
@@ -10,11 +10,11 @@ import httpStatus from 'http-status';
 
 
 const createProject = async (payload:TProject,
-    // userId:Types.ObjectId
+    userId:Types.ObjectId
 ) => {
   return await Project.create({
     ...payload,
-    // createdBy: userId,
+    createdBy: userId,
   });
 };
 

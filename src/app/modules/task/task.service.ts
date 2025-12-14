@@ -59,15 +59,86 @@ const getAllTasks = async (query: Record<string, unknown>) => {
 };
 
 const getSingleTask = async (taskId: string) => {
-  const task = await Task.findOne({ _id: taskId, isDeleted: false }).populate([
+  const task = await Task.findOne({
+    _id: taskId,
+    isDeleted: false,
+  }).populate([
     { path: 'assignees', select: 'name email role' },
     { path: 'sprintId', select: 'title sprintNumber order projectId' },
     { path: 'projectId', select: 'title client status' },
+
+  
+    {
+      path: 'activityLog.userId',
+      select: 'name role',
+    },
   ]);
 
   if (!task) throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
   return task;
 };
+const logTaskTime = async (
+  taskId: string,
+  hours: number,
+  user: { userId: string; role: string },
+) => {
+  if (hours <= 0) {
+    throw new AppError(httpStatus.BAD_REQUEST, 'Hours must be positive');
+  }
+
+  const task = await Task.findOne({ _id: taskId, isDeleted: false });
+
+  if (!task) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Task not found');
+  }
+
+  if (
+    user.role === 'member' &&
+    task.assignees &&
+    !task.assignees.map(id => id.toString()).includes(user.userId)
+  ) {
+    throw new AppError(
+      httpStatus.FORBIDDEN,
+      'You are not assigned to this task',
+    );
+  }
+
+
+  task.timeLogs = task.timeLogs || [];
+  task.timeLogs.push({
+    userId: new Types.ObjectId(user.userId),
+    hours,
+    date: new Date(),
+  });
+
+
+  task.loggedHours = task.timeLogs.reduce(
+    (sum, log) => sum + log.hours,
+    0,
+  );
+
+
+  task.activityLog?.push({
+    action: `Logged ${hours} hours`,
+    userId: new Types.ObjectId(user.userId),
+    createdAt: new Date(),
+  });
+
+  await task.save();
+
+ 
+const populatedTask = await Task.findById(task._id).populate([
+  { path: 'assignees', select: 'name email role' },
+  { path: 'projectId', select: 'title client status' },
+  { path: 'sprintId', select: 'title sprintNumber order projectId' },
+  { path: 'activityLog.userId', select: 'name role' },
+  { path: 'timeLogs.userId', select: 'name role' },
+]);
+
+return populatedTask;
+};
+
+
 
 const updateTask = async (
   taskId: string,
@@ -182,4 +253,5 @@ export const TaskService = {
   updateTask,
   updateTaskStatus,
   deleteTask,
+   logTaskTime,
 };

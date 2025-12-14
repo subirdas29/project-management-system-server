@@ -39,6 +39,13 @@ router.patch(
   validationRequest(taskValidation.updateTaskValidationSchema),
   TaskController.updateTask,
 );
+router.patch(
+  '/:taskId/log-time',
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+  validationRequest(taskValidation.logTaskTimeValidationSchema),
+  TaskController.logTaskTime,
+);
+
 
 router.delete(
   '/:taskId',

@@ -21,26 +21,36 @@ export type TTaskActivity = {
   createdAt: Date;
 };
 
+export type TTimeLog = {
+  userId: Types.ObjectId;
+  hours: number;
+  date: Date;
+};
+
+
 export type TTask = {
   title: string;
   description?: string;
+
+  estimateHours?: number;
+
+  loggedHours?: number;
+  timeLogs?: TTimeLog[]; 
 
   projectId: Types.ObjectId;
   sprintId: Types.ObjectId;
 
   assignees?: Types.ObjectId[];
 
-  estimateHours?: number;
   priority: TTaskPriority;
   status: TTaskStatus;
 
   dueDate?: Date;
-
-  attachments?: TAttachment[]; 
+  attachments?: TAttachment[];
   subtasks?: TSubTask[];
 
   isDeleted?: boolean;
-activityLog?: TTaskActivity[];
+  activityLog?: TTaskActivity[];
   createdAt?: Date;
   updatedAt?: Date;
 };

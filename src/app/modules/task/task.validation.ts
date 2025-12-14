@@ -68,7 +68,7 @@ const updateTaskValidationSchema = z.object({
   }),
 });
 
-// Kanban drag-drop: only status update
+
 const updateTaskStatusValidationSchema = z.object({
   body: z.object({
     status: z.enum(
@@ -77,8 +77,15 @@ const updateTaskStatusValidationSchema = z.object({
   }),
 });
 
+const logTaskTimeValidationSchema = z.object({
+  body: z.object({
+    hours: z.number().positive('Hours must be greater than 0'),
+  }),
+});
+
 export const taskValidation = {
   createTaskValidationSchema,
   updateTaskValidationSchema,
   updateTaskStatusValidationSchema,
+  logTaskTimeValidationSchema
 };

@@ -79,6 +79,25 @@ const updateTaskStatus = catchAsync(async (req, res) => {
   });
 });
 
+const logTaskTime = catchAsync(async (req, res) => {
+  const { taskId } = req.params;
+  const { hours } = req.body;
+
+  const result = await TaskService.logTaskTime(
+    taskId,
+    hours,
+    req.user as { userId: string; role: string },
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Time logged successfully',
+    data: result,
+  });
+});
+
+
 const deleteTask = catchAsync(async (req, res) => {
   const { taskId } = req.params;
   await TaskService.deleteTask(taskId);
@@ -98,4 +117,5 @@ export const TaskController = {
   updateTask,
   updateTaskStatus,
   deleteTask,
+  logTaskTime
 };
