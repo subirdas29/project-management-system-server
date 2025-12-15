@@ -80,26 +80,50 @@ const deleteProject = async (projectId: string) => {
 };
 
 const getProjectOverview = async (projectId: string) => {
-  const project = await Project.findById(projectId);
-  if (!project) throw new AppError(404, 'Project not found');
+  const pid = new Types.ObjectId(projectId);
 
-  const totalTasks = await Task.countDocuments({ projectId });
-  const completedTasks = await Task.countDocuments({
-    projectId,
-    status: 'Done',
+  const project = await Project.findOne({
+    _id: pid,
+    isDeleted: false,
   });
 
-  const sprints = await Sprint.find({ projectId }).select('title sprintNumber');
+  if (!project) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
+  }
 
+
+  const totalSprints = await Sprint.countDocuments({
+    projectId: pid,
+    isDeleted: false,
+  });
+
+ 
+  const totalTasks = await Task.countDocuments({
+    projectId: pid,
+    isDeleted: false,
+  });
+
+
+  const completedTasks = await Task.countDocuments({
+    projectId: pid,
+    status: 'done', 
+    isDeleted: false,
+  });
+
+  
   const progress =
-    totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+    totalTasks === 0
+      ? 0
+      : Math.round((completedTasks / totalTasks) * 100);
 
   return {
     project,
-    totalTasks,
-    completedTasks,
+    sprintStats: {
+      totalSprints,
+      totalTasks,
+      completedTasks,
+    },
     progress,
-    sprints,
   };
 };
 

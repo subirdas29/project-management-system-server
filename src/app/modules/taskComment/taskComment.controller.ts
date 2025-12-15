@@ -29,6 +29,22 @@ const getTaskComments = catchAsync(async (req, res) => {
   });
 });
 
+const updateComment = catchAsync(async (req, res) => {
+  const result = await TaskCommentService.updateComment(
+    req.params.commentId,
+    req.body.content,
+    req.user.userId,
+  );
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Comment updated',
+    data: result,
+  });
+});
+
+
 const deleteComment = catchAsync(async (req, res) => {
   const { commentId } = req.params;
   const { userId } = req.user;
@@ -46,5 +62,6 @@ const deleteComment = catchAsync(async (req, res) => {
 export const TaskCommentController = {
   addComment,
   getTaskComments,
+  updateComment,
   deleteComment,
 };

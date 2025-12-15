@@ -70,7 +70,7 @@ const getSingleTask = async (taskId: string) => {
   
     {
       path: 'activityLog.userId',
-      select: 'name role',
+      select: 'name email role',
     },
   ]);
 
@@ -131,8 +131,8 @@ const populatedTask = await Task.findById(task._id).populate([
   { path: 'assignees', select: 'name email role' },
   { path: 'projectId', select: 'title client status' },
   { path: 'sprintId', select: 'title sprintNumber order projectId' },
-  { path: 'activityLog.userId', select: 'name role' },
-  { path: 'timeLogs.userId', select: 'name role' },
+  { path: 'activityLog.userId', select: 'name email role' },
+  { path: 'timeLogs.userId', select: 'name email role' },
 ]);
 
 return populatedTask;

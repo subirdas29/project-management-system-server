@@ -23,7 +23,7 @@ router.post(
 router.patch(
   '/:taskId/status',
   auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
-  validationRequest(taskValidation.updateTaskStatusValidationSchema),
+  // validationRequest(taskValidation.updateTaskStatusValidationSchema),
   TaskController.updateTaskStatus,
 );
 
@@ -35,7 +35,7 @@ router.get(
 
 router.patch(
   '/:taskId',
-  auth(USER_ROLES.admin, USER_ROLES.manager),
+  auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
   validationRequest(taskValidation.updateTaskValidationSchema),
   TaskController.updateTask,
 );

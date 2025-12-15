@@ -178,20 +178,34 @@ const reorderSprints = async (payload: {
 };
 const getSprintDetails = async (sprintId: string) => {
   const sprint = await Sprint.findById(sprintId);
-  if (!sprint) throw new AppError(404, 'Sprint not found');
+  if (!sprint) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Sprint not found');
+  }
 
-  const tasks = await Task.find({ sprintId });
+  const totalTasks = await Task.countDocuments({
+    sprintId,
+    isDeleted: false,
+  });
 
-  const completed = tasks.filter((t) => t.status === 'done').length;
+  const completedTasks = await Task.countDocuments({
+    sprintId,
+    status: 'done', 
+    isDeleted: false,
+  });
+
   const progress =
-    tasks.length === 0 ? 0 : Math.round((completed / tasks.length) * 100);
+    totalTasks === 0
+      ? 0
+      : Math.round((completedTasks / totalTasks) * 100);
 
   return {
-    sprint,
-    tasks,
+    ...sprint.toObject(),
+    totalTasks,
+    completedTasks,
     progress,
   };
 };
+
 
 
 export const SprintService = {

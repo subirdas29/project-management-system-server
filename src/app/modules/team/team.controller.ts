@@ -5,6 +5,7 @@ import { TeamService } from './team.service';
 
 const addTeamMember = catchAsync(async (req, res) => {
   const result = await TeamService.addTeamMember(req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,
@@ -14,20 +15,27 @@ const addTeamMember = catchAsync(async (req, res) => {
 });
 
 const getProjectTeam = catchAsync(async (req, res) => {
-  const result = await TeamService.getProjectTeam(req.params.projectId);
+  const { projectId } = req.params;
+  const { page, limit } = req.query;
+
+  const result = await TeamService.getProjectTeam(
+    projectId,
+    Number(page) || 1,
+    Number(limit) || 10,
+  );
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: 'Project team fetched',
-    data: result,
+    data: result.data,
+    meta: result.meta,
   });
 });
 
 const updateTeamMember = catchAsync(async (req, res) => {
-  const result = await TeamService.updateTeamMember(
-    req.params.teamId,
-    req.body,
-  );
+  const result = await TeamService.updateTeamMember(req.params.teamId, req.body);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -38,6 +46,7 @@ const updateTeamMember = catchAsync(async (req, res) => {
 
 const removeTeamMember = catchAsync(async (req, res) => {
   await TeamService.removeTeamMember(req.params.teamId);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -46,9 +55,12 @@ const removeTeamMember = catchAsync(async (req, res) => {
   });
 });
 
+
+
 export const TeamController = {
   addTeamMember,
   getProjectTeam,
   updateTeamMember,
   removeTeamMember,
+ 
 };

@@ -22,6 +22,10 @@ router.get(
   TaskCommentController.getTaskComments,
 );
 
+router.patch('/:commentId',   
+auth(USER_ROLES.admin, USER_ROLES.manager, USER_ROLES.member),
+ TaskCommentController.updateComment);
+
 
 router.delete(
   '/:commentId',

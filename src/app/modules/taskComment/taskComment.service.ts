@@ -35,8 +35,28 @@ const getTaskComments = async (taskId: string) => {
     taskId: new Types.ObjectId(taskId),
     isDeleted: false,
   })
-    .populate('userId', 'name email')
+    .populate('userId', 'name email role')
     .sort({ createdAt: 1 });
+};
+const updateComment = async (
+  commentId: string,
+  content: string,
+  userId: string,
+) => {
+  const comment = await TaskComment.findById(commentId);
+
+  if (!comment || comment.isDeleted) {
+    throw new AppError(httpStatus.NOT_FOUND, 'Comment not found');
+  }
+
+  if (comment.userId.toString() !== userId) {
+    throw new AppError(httpStatus.FORBIDDEN, 'Not authorized');
+  }
+
+  comment.content = content;
+  await comment.save();
+
+  return comment;
 };
 
 const deleteComment = async (commentId: string, userId: string) => {
@@ -60,5 +80,6 @@ const deleteComment = async (commentId: string, userId: string) => {
 export const TaskCommentService = {
   addComment,
   getTaskComments,
+  updateComment,
   deleteComment,
 };
