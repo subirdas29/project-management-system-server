@@ -91,26 +91,22 @@ const getProjectOverview = async (projectId: string) => {
     throw new AppError(httpStatus.NOT_FOUND, 'Project not found');
   }
 
-
   const totalSprints = await Sprint.countDocuments({
     projectId: pid,
     isDeleted: false,
   });
 
- 
   const totalTasks = await Task.countDocuments({
     projectId: pid,
     isDeleted: false,
   });
 
-
   const completedTasks = await Task.countDocuments({
     projectId: pid,
-    status: 'done', 
+    status: 'done',
     isDeleted: false,
   });
 
-  
   const progress =
     totalTasks === 0
       ? 0

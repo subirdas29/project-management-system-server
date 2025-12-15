@@ -10,7 +10,7 @@ export type TUser = {
   password: string;
   role: TUserRole;
 
-  // PDF fields
+
   department?: string;
   skills?: string[];
 

@@ -23,13 +23,13 @@ router.get(
 
 router.patch(
   '/:teamId',
-  auth(USER_ROLES.admin),
+  auth(USER_ROLES.admin, USER_ROLES.manager,),
   TeamController.updateTeamMember,
 );
 
 router.delete(
   '/:teamId',
-  auth(USER_ROLES.admin),
+  auth(USER_ROLES.admin, USER_ROLES.manager),
   TeamController.removeTeamMember,
 );
 

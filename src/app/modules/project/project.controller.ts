@@ -7,7 +7,7 @@ import httpStatus from 'http-status';
 const createProject = catchAsync(async (req, res) => {
   const result = await ProjectService.createProject(
     req.body,
-    // req.user.userId,
+    req.user.userId,
   );
 
   sendResponse(res, {
