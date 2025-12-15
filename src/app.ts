@@ -12,7 +12,8 @@ app.use(cookieParser());
 app.use(
   cors({
     
-    origin: 'http://localhost:3000',
+    // origin: 'http://localhost:3000',
+     origin: 'https://project-management-system-client-yk.vercel.app',
     
     credentials: true,
   }),
