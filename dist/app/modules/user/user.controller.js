@@ -13,100 +13,63 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserController = void 0;
+const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResponse_1 = __importDefault(require("../../utils/sendResponse"));
 const user_service_1 = require("./user.service");
-const http_status_1 = __importDefault(require("http-status"));
-const registerUserController = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const registerUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield user_service_1.UserServices.registerUser(req.body);
     (0, sendResponse_1.default)(res, {
+        statusCode: http_status_1.default.CREATED,
         success: true,
         message: 'User registered successfully',
-        statusCode: http_status_1.default.CREATED,
-        data: result
+        data: result,
     });
 }));
 const getAllUsers = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const query = req.query;
-    const result = yield user_service_1.UserServices.getAllUsers(query);
+    const result = yield user_service_1.UserServices.getAllUsers(req.query);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Users fetched successfully",
+        message: 'Users fetched successfully',
         meta: result.meta,
         data: result.result,
     });
 }));
-const getMyOrder = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.user;
-    const query = req.query;
-    const result = yield user_service_1.UserServices.getMyOrder(email, query);
-    (0, sendResponse_1.default)(res, {
-        statusCode: http_status_1.default.OK,
-        success: true,
-        message: 'My Order is retrieved successfully',
-        meta: result.meta,
-        data: result.result,
-    });
-}));
-const getAUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getSingleUser = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-    const result = yield user_service_1.UserServices.getAUser(userId);
+    const result = yield user_service_1.UserServices.getSingleUser(userId);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'User is retrieved successfully',
+        message: 'User fetched successfully',
         data: result,
     });
 }));
 const getMe = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email, role } = req.user;
-    const result = yield user_service_1.UserServices.getMe(email, role);
+    const { email } = req.user;
+    const result = yield user_service_1.UserServices.getMe(email);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: 'User is retrieved successfully',
+        message: 'My profile fetched successfully',
         data: result,
     });
 }));
-// const blockUser = catchAsync(async (req, res) => {
-//   const {userId} = req.params
-//   const result = await UserServices.blockUser(userId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User is blocked successfully',
-//     data: result,
-//   });
-// });
-// const unblockUser = catchAsync(async (req, res) => {
-//   const {userId} = req.params
-//   const result = await UserServices.unblockUser(userId);
-//   sendResponse(res, {
-//     statusCode: httpStatus.OK,
-//     success: true,
-//     message: 'User is unblocked successfully',
-//     data: result,
-//   });
-// });
-const profileData = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const updateProfile = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email } = req.user;
-    const profileDetails = req.body;
-    const result = yield user_service_1.UserServices.profileData(email, profileDetails);
+    const result = yield user_service_1.UserServices.updateProfile(email, req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,
-        message: "Profile updated successfully",
+        message: 'Profile updated successfully',
         data: result,
     });
 }));
 exports.UserController = {
-    registerUserController,
+    registerUser,
     getAllUsers,
-    getMyOrder,
-    getAUser,
+    getSingleUser,
     getMe,
-    // blockUser,
-    // unblockUser,
-    profileData
+    updateProfile,
 };

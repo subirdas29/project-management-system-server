@@ -20,7 +20,11 @@ const user_model_1 = require("../modules/user/user.model");
 const auth_utils_1 = require("../modules/auth/auth.utils");
 const auth = (...requiredRoles) => {
     return (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-        const token = req.headers.authorization;
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'You are not authorized');
+        }
+        const token = authHeader.split(' ')[1];
         if (!token) {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'You are not authorized');
         }
@@ -28,27 +32,29 @@ const auth = (...requiredRoles) => {
         try {
             decoded = (0, auth_utils_1.verifyToken)(token, config_1.default.jwt_access_secret);
         }
-        catch (err) {
+        catch (_a) {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'You are not authorized');
         }
         const { email, role, iat } = decoded;
         const user = yield user_model_1.User.isUserExist(email);
         if (!user) {
-            throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found !');
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, 'This user is not found!');
         }
-        // checking if the user is already deleted
-        const isUserDeleted = user === null || user === void 0 ? void 0 : user.isDeleted;
-        if (isUserDeleted) {
+        if (user.isDeleted) {
             throw new AppError_1.default(http_status_1.default.FORBIDDEN, 'This user is deleted');
         }
         if (user.passwordChangedAt &&
             user_model_1.User.isJWTIssuedBeforePasswordChanged(user.passwordChangedAt, iat)) {
-            throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'You are not authorized !');
+            throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'You are not authorized!');
         }
-        if (requiredRoles && !requiredRoles.includes(role)) {
+        if (requiredRoles.length && !requiredRoles.includes(role)) {
             throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, 'You are not authorized');
         }
-        req.user = decoded;
+        req.user = {
+            userId: decoded.userId,
+            email: decoded.email,
+            role: decoded.role,
+        };
         next();
     }));
 };

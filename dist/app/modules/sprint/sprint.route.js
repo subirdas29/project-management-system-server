@@ -1,0 +1,21 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SprintRoutes = void 0;
+const express_1 = __importDefault(require("express"));
+const sprint_controller_1 = require("./sprint.controller");
+const sprint_validation_1 = require("./sprint.validation");
+const auth_1 = __importDefault(require("../../middlewares/auth"));
+const user_constant_1 = require("../user/user.constant");
+const validateRequest_1 = __importDefault(require("../../middlewares/validateRequest"));
+const router = express_1.default.Router();
+router.patch('/reorder', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager), (0, validateRequest_1.default)(sprint_validation_1.sprintValidation.reorderSprintValidationSchema), sprint_controller_1.SprintController.reorderSprints);
+router.post('/', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager), (0, validateRequest_1.default)(sprint_validation_1.sprintValidation.createSprintValidationSchema), sprint_controller_1.SprintController.createSprint);
+router.get('/project/:projectId', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager, user_constant_1.USER_ROLES.member), sprint_controller_1.SprintController.getProjectSprints);
+router.get('/:sprintId', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager, user_constant_1.USER_ROLES.member), sprint_controller_1.SprintController.getSingleSprint);
+router.patch('/:sprintId', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager), (0, validateRequest_1.default)(sprint_validation_1.sprintValidation.updateSprintValidationSchema), sprint_controller_1.SprintController.updateSprint);
+router.delete('/:sprintId', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager), sprint_controller_1.SprintController.deleteSprint);
+router.get('/:sprintId/details', (0, auth_1.default)(user_constant_1.USER_ROLES.admin, user_constant_1.USER_ROLES.manager, user_constant_1.USER_ROLES.member), sprint_controller_1.SprintController.getSprintDetails);
+exports.SprintRoutes = router;
