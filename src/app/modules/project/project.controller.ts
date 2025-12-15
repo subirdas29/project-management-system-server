@@ -19,7 +19,13 @@ const createProject = catchAsync(async (req, res) => {
 });
 
 const getAllProjects = catchAsync(async (req, res) => {
-  const result = await ProjectService.getAllProjects(req.query);
+ const result = await ProjectService.getAllProjects(
+  req.query,
+  {
+    userId: req.user.userId,
+    role: req.user.role,
+  }
+);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

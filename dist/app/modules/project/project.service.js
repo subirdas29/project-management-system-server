@@ -20,11 +20,26 @@ const sprint_model_1 = require("../sprint/sprint.model");
 const task_model_1 = require("../task/task.model");
 const project_model_1 = require("./project.model");
 const http_status_1 = __importDefault(require("http-status"));
+const team_model_1 = require("../team/team.model");
 const createProject = (payload, userId) => __awaiter(void 0, void 0, void 0, function* () {
     return yield project_model_1.Project.create(Object.assign(Object.assign({}, payload), { createdBy: userId }));
 });
-const getAllProjects = (query) => __awaiter(void 0, void 0, void 0, function* () {
-    const qb = new QueryBuilder_1.default(project_model_1.Project.find({ isDeleted: false }), query)
+const getAllProjects = (query, user) => __awaiter(void 0, void 0, void 0, function* () {
+    let projectQuery;
+    if (user.role === 'member') {
+        const teamMembers = yield team_model_1.Team.find({ userId: user.userId }, { projectId: 1, _id: 0 });
+        const projectIds = teamMembers.map((tm) => tm.projectId);
+        projectQuery = project_model_1.Project.find({
+            _id: { $in: projectIds },
+            isDeleted: false,
+        });
+    }
+    else {
+        projectQuery = project_model_1.Project.find({
+            isDeleted: false,
+        });
+    }
+    const qb = new QueryBuilder_1.default(projectQuery, query)
         .search(['title', 'client'])
         .filter()
         .sort()

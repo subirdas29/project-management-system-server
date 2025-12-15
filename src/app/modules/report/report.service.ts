@@ -99,7 +99,112 @@ const getUserReport = async (userId: string) => {
   };
 };
 
+
+const getMyProjectReports = async (userId: string) => {
+  const uid = new Types.ObjectId(userId);
+
+  return Task.aggregate([
+    {
+      $match: {
+        assignees: uid,
+        isDeleted: false,
+      },
+    },
+
+  
+    {
+      $unwind: {
+        path: '$timeLogs',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+   
+    {
+      $match: {
+        $or: [
+          { 'timeLogs.userId': uid },
+          { timeLogs: null },
+        ],
+      },
+    },
+
+  
+    {
+      $group: {
+        _id: '$projectId',
+        totalTasks: { $addToSet: '$_id' },
+
+        completedTasks: {
+          $sum: {
+            $cond: [{ $eq: ['$status', 'done'] }, 1, 0],
+          },
+        },
+
+        totalEstimatedHours: {
+          $sum: { $ifNull: ['$estimateHours', 0] },
+        },
+
+        totalLoggedHours: {
+          $sum: { $ifNull: ['$timeLogs.hours', 0] },
+        },
+      },
+    },
+
+ 
+    {
+      $addFields: {
+        totalTasks: { $size: '$totalTasks' },
+      },
+    },
+
+ 
+    {
+      $lookup: {
+        from: 'projects',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'project',
+      },
+    },
+    { $unwind: '$project' },
+
+    {
+      $project: {
+        projectId: '$_id',
+        projectTitle: '$project.title',
+        totalTasks: 1,
+        completedTasks: 1,
+        remainingTasks: {
+          $subtract: ['$totalTasks', '$completedTasks'],
+        },
+        progressPercent: {
+          $cond: [
+            { $eq: ['$totalTasks', 0] },
+            0,
+            {
+              $round: [
+                {
+                  $multiply: [
+                    { $divide: ['$completedTasks', '$totalTasks'] },
+                    100,
+                  ],
+                },
+                0,
+              ],
+            },
+          ],
+        },
+        totalEstimatedHours: 1,
+        totalLoggedHours: 1,
+      },
+    },
+  ]);
+};
+
+
 export const ReportService = {
   getProjectReport,
   getUserReport,
+  getMyProjectReports,
 };

@@ -21,7 +21,7 @@ const getMyReport = catchAsync(async (req, res) => {
   const userId = req.user.userId;
 
   const result =
-    await ReportService.getUserReport(userId);
+    await ReportService.getMyProjectReports(userId);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,

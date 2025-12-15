@@ -7,6 +7,7 @@ import { TProject } from './project.interface';
 import { Project } from './project.model';
 
 import httpStatus from 'http-status';
+import { Team } from '../team/team.model';
 
 
 const createProject = async (payload:TProject,
@@ -18,11 +19,42 @@ const createProject = async (payload:TProject,
   });
 };
 
-const getAllProjects = async (query: Record<string, unknown>) => {
-  const qb = new QueryBuilder(
-    Project.find({ isDeleted: false }),
-    query,
-  )
+const getAllProjects = async (
+  query: Record<string, unknown>,
+  user: {
+    userId: Types.ObjectId;
+    role: string;
+  }
+) => {
+
+  let projectQuery;
+
+
+  if (user.role === 'member') {
+
+    const teamMembers = await Team.find(
+      { userId: user.userId },
+      { projectId: 1, _id: 0 }
+    );
+
+    const projectIds = teamMembers.map(
+      (tm) => tm.projectId
+    );
+
+    projectQuery = Project.find({
+      _id: { $in: projectIds },
+      isDeleted: false,
+    });
+
+  } 
+
+  else {
+    projectQuery = Project.find({
+      isDeleted: false,
+    });
+  }
+
+  const qb = new QueryBuilder(projectQuery, query)
     .search(['title', 'client'])
     .filter()
     .sort()
@@ -34,6 +66,7 @@ const getAllProjects = async (query: Record<string, unknown>) => {
     meta: await qb.countTotal(),
   };
 };
+
 
 const getSingleProject = async (id: string) => {
   const project = await Project.findOne({
